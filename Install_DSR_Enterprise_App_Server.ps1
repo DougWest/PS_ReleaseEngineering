@@ -62,10 +62,10 @@ $ZipFileName = Nexus-DownloadFile
 
 # Deploy the package.
 Write-Host "Deploying the NCR_DSR_Enterprise_Server package."
-$UNCFilePath=(Get-TargetWorkspace)[-1]
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
-if ("False" -EQ (test-path -path "${UNCFilePath}\unzipped")){New-Item -path "${UNCFilePath}\unzipped" -type directory}
-if ("False" -EQ (test-path -path "$UNCFilePath\$ZipFileName")){copy $ZipFileName "$UNCFilePath\$ZipFileName"}
+if ("False" -EQ (test-path -path "${TargetWSPath}\unzipped")){New-Item -path "${TargetWSPath}\unzipped" -type directory}
+if ("False" -EQ (test-path -path "${TargetWSPath}\$ZipFileName")){copy $ZipFileName "${TargetWSPath}\$ZipFileName"}
 
 $INSTALLDIR="D:\Program Files (x86)\NCR\DSREnterprise\"
 $INSTALLDIR_UNC="Y:\Program Files (x86)\NCR\DSREnterprise\"
@@ -88,11 +88,11 @@ else
     "Start-Process msiexec '/i `"NCR DSR Enterprise Server.msi`" /qn INSTALLDIR=`"${INSTALLDIR}`" INSTALL_APPS=`"1`" INSTALL_CUST=`"`" INSTALL_SAM=`"1`" INSTALL_UTIL=`"`" INSTALL_WEB=`"`" DBSETUPCORE_SERVER=$env:DB DBSETUPCORE_USERNAME=${env:SQLUser} DBSETUPCORE_PASSWORD=${env:SQLUserPW} DBSETUPPRODUCT_SERVER=$env:DB DBSETUPPRODUCT_USERNAME=${env:SQLUser} DBSETUPPRODUCT_PASSWORD=${env:SQLUserPW} DBSETUPTRANSACTION_LOG_SERVER=$env:DB DBSETUPTRANSACTION_LOG_USERNAME=${env:SQLUser} DBSETUPTRANSACTION_LOG_PASSWORD=${env:SQLUserPW} DBSETUPTRANSACTIONS_SERVER=$env:DB DBSETUPTRANSACTIONS_USERNAME=${env:SQLUser} DBSETUPTRANSACTIONS_PASSWORD=${env:SQLUserPW} DBSETUPEJ_SERVER=$env:DB DBSETUPEJ_USERNAME=${env:SQLUser} DBSETUPEJ_PASSWORD=${env:SQLUserPW} DBSETUPEOM_SERVER=$env:DB DBSETUPEOM_USERNAME=${env:SQLUser} DBSETUPEOM_PASSWORD=${env:SQLUserPW} DBSETUPTRUSTEDCUSTOMER_SERVER=$env:DB DBSETUPTRUSTEDCUSTOMER_USERNAME=${env:SQLUser} DBSETUPTRUSTEDCUSTOMER_PASSWORD=${env:SQLUserPW} DBSETUPLOGDB_SERVER=$env:DB DBSETUPLOGDB_USERNAME=${env:SQLUser} DBSETUPLOGDB_PASSWORD=${env:SQLUserPW} RABBITMQSETUP_SERVER=$env:RABBIT REBOOT=ReallySuppress /l*v d:\temp\unzipped\logit.txt' -Wait" | Out-File -Append -FilePath runthis.ps1
 }
 
-copy runthis.ps1 "$UNCFilePath\runthis.ps1"
+copy runthis.ps1 "${TargetWSPath}\runthis.ps1"
 
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}
 
-copy "$UNCFilePath\unzipped\logit.txt" .
+copy "${TargetWSPath}\unzipped\logit.txt" .
 
 # Check the target status.
 Write-Host "Checking the target status post-install."

@@ -1,5 +1,7 @@
 if (-NOT $env:Target_Machine){Write-Host "Required parameter Target_Machine is null!"; exit 1}
 if (-NOT $env:Target_Version){Write-Host "Required parameter Target_Version is null!"; exit 1}
+if (-NOT $env:NCRPostgresUser){Write-Host "Required parameter NCRPostgresUser is null!"; exit 1}
+if (-NOT $env:NCRPostgresPwd){Write-Host "Required parameter NCRPostgresPwd is null!"; exit 1}
 
 . "./DSR_AMS/Create-PSCredential.ps1"
 
@@ -30,19 +32,19 @@ if ($DisplayName)
 $Artifact="postgresql"
 $ZipFileName = Nexus-DownloadFile -repositoryId "thirdparty" -groupId "org.postgresql" -classifierId "x64" -extensionId "exe"
 
-$UNCFilePath=(Get-TargetWorkspace)[-1]
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
-if ("False" -EQ (test-path ${UNCFilePath}${ZipFileName})){copy ${ZipFileName} ${UNCFilePath}}
+if ("False" -EQ (test-path ${TargetWSPath}${ZipFileName})){copy ${ZipFileName} ${TargetWSPath}}
 
 "d:" | Out-File -FilePath runthis.ps1
 "cd \temp" | Out-File -Append -FilePath runthis.ps1
-"Start-Process ${ZipFileName} `"--mode unattended --unattendedmodeui none --prefix ```"D:\Program Files\PostgreSQL\${Target_Short_Version}```" --superaccount postgres --superpassword ***** --serverport 5432 --disable-stackbuilder yes`" -Wait | Out-File -FilePath d:\temp\output0.txt" | Out-File -Append -FilePath runthis.ps1
+"Start-Process ${ZipFileName} `"--mode unattended --unattendedmodeui none --prefix ```"D:\Program Files\PostgreSQL\${Target_Short_Version}```" --superaccount $env:NCRPostgresUser --superpassword $env:NCRPostgresPwd --serverport 5432 --disable-stackbuilder yes`" -Wait | Out-File -FilePath d:\temp\output0.txt" | Out-File -Append -FilePath runthis.ps1
 "if (test-path `"C:\Users\Jenkins_dev_qa\AppData\Local\Temp\install-postgresql.log`"){copy `"C:\Users\Jenkins_dev_qa\AppData\Local\Temp\install-postgresql.log`" .}" | Out-File -Append -FilePath runthis.ps1
 
-copy runthis.ps1 ${UNCFilePath}
+copy runthis.ps1 ${TargetWSPath}
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1}
-if (test-path ${UNCFilePath}\output0.txt){copy ${UNCFilePath}\output0.txt .}
-if (test-path ${UNCFilePath}\install-postgresql.log){copy ${UNCFilePath}\install-postgresql.log .}
+if (test-path ${TargetWSPath}\output0.txt){copy ${TargetWSPath}\output0.txt .}
+if (test-path ${TargetWSPath}\install-postgresql.log){copy ${TargetWSPath}\install-postgresql.log .}
 
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {[Environment]::SetEnvironmentVariable( "Path", "$env:Path;D:\Program Files\PostgreSQL\${Target_Short_Version}\bin;%JAVA_HOME%\bin", [System.EnvironmentVariableTarget]::Machine )}
 

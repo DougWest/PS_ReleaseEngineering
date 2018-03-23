@@ -17,9 +17,9 @@ $ZipFileName = Nexus-DownloadFile -groupId "com.rei.retail.ncr" -versionId "LATE
 
 # Deploy the package.
 Write-Host "Setting up the deployment."
-$UNCFilePath=(Get-TargetWorkspace)[-1]
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
-if ("False" -EQ (test-path -path "${UNCFilePath}\$ZipFileName")){copy $ZipFileName "${UNCFilePath}\$ZipFileName"}
+if ("False" -EQ (test-path -path "${TargetWSPath}\$ZipFileName")){copy $ZipFileName "${TargetWSPath}\$ZipFileName"}
 
 $INSTALLDIR="D:\NCR\RabbitMQMonitor"
 $INSTALLDIR_UNC="Y:\NCR\RabbitMQMonitor"
@@ -46,7 +46,7 @@ if ("False" -EQ (test-path -path $INSTALLDIR_UNC)){mkdir $INSTALLDIR_UNC}
 "}" | Out-File -Append -FilePath runthis.ps1
 "&`"`${env:Windir}\System32\sc`" start RabbitMQMonitor" | Out-File -Append -FilePath runthis.ps1
 
-copy runthis.ps1 "${UNCFilePath}\runthis.ps1"
+copy runthis.ps1 "${TargetWSPath}\runthis.ps1"
 
 Write-Host "Deploying the $Artifact package."
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}

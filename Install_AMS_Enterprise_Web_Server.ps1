@@ -36,10 +36,10 @@ $ZipFileName = Nexus-DownloadFile
 
 # Deploy the package.
 Write-Host "Setting up the deployment."
-$UNCFilePath=(Get-TargetWorkspace)[-1]
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
-if ("False" -EQ (test-path -path "${UNCFilePath}\unzipped")){New-Item -path "${UNCFilePath}\unzipped" -type directory}
-if ("False" -EQ (test-path -path "$UNCFilePath\$ZipFileName")){copy $ZipFileName "$UNCFilePath\$ZipFileName"}
+if ("False" -EQ (test-path -path "${TargetWSPath}\unzipped")){New-Item -path "${TargetWSPath}\unzipped" -type directory}
+if ("False" -EQ (test-path -path "${TargetWSPath}\$ZipFileName")){copy $ZipFileName "${TargetWSPath}\$ZipFileName"}
 
 $INSTALLDIR="`"D:\Copient\`""
 $INSTALLDIR_UNC="Y:\Copient"
@@ -58,12 +58,12 @@ if ("True" -EQ (test-path -path "$INSTALLDIR_UNC\unzipped\Logix_*")){Remove-Item
 "if (test-path logit.txt){Remove-Item logit.txt}" | Out-File -Append -FilePath runthis.ps1
 "Start-Process msiexec '/i Logix.msi /qn SERVER_TYPE=web INSTALL_UE=true INSTALLDIR=$INSTALLDIR WEBUSER=${env:CopientWebUser} WEBPASSWORD=${env:CopientWebPass} WEBPASSWORD2=${env:CopientWebPass} RESET_WEB_PASSWORD=true HOST_HEADER_NAME=`"`" LISTEN_ADDRESS=* PORT_NUMBER=80 LOGIXEX_DATABASE=LogixEX LOGIXEX_SERVER=${env:DB} LOGIXRT_DATABASE=LogixRT LOGIXRT_SERVER=${env:DB} LOGIXWH_DATABASE=LogixWH LOGIXWH_SERVER=${env:DB} LOGIXXS_DATABASE=LogixXS LOGIXXS_SERVER=${env:DB} REBOOT=ReallySuppress /l*v d:\temp\unzipped\logit.txt' -Wait" | Out-File -Append -FilePath runthis.ps1
 
-copy runthis.ps1 "$UNCFilePath\runthis.ps1"
+copy runthis.ps1 "${TargetWSPath}\runthis.ps1"
 
 Write-Host "Deploying the $Artifact package."
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}
 
-copy "$UNCFilePath\unzipped\logit.txt" .
+copy "${TargetWSPath}\unzipped\logit.txt" .
 
 Remove-PSDrive Y
 

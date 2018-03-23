@@ -14,7 +14,7 @@ $RegTermTarget="'{569F15AE-5C62-44B6-96A1-CDEC8ECB1EEB}'"
 $objRegChildReturn=Get-RegChild
 if ($objRegChildReturn)
 {
-    $UNCFilePath=(Get-TargetWorkspace)[-1]
+    $TargetWSPath=(Get-TargetWorkspace)[-1]
 
     $EPWD="YjdB3jBNo4QLrdvzw4/Elw=="
 
@@ -33,7 +33,7 @@ if ($objRegChildReturn)
     $CParamQ="'"+$CParam+"'"
     "Start-Process '.\Ncr.Retail.NcrDataSetup.exe' $CParamQ -Wait" | Out-File -Append -FilePath cfgthis.ps1
 
-    copy cfgthis.ps1 "$UNCFilePath\cfgthis.ps1"
+    copy cfgthis.ps1 "${TargetWSPath}\cfgthis.ps1"
 
     invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\cfgthis.ps1; echo Configured.}
 

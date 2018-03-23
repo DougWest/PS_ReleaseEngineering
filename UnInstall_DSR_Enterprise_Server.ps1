@@ -17,13 +17,13 @@ if ($objRegChildReturn)
     #Uninstall the package.
     $FileName=Get-ChildItemNameValue ("UninstallString")
 
-    $UNCFilePath=(Get-TargetWorkspace)[-1]
+    $TargetWSPath=(Get-TargetWorkspace)[-1]
 
     "Start-Process MsiExec.exe '/X"+$objRegChildReturn.PSChildName+" /qn' -Wait | Out-File -FilePath d:\temp\output0.txt" | Out-File -FilePath runthis.ps1
     "if (test-path 'D:\Program Files (x86)\NCR\DSREnterprise\'){Remove-Item -Recurse -Force `"D:\Program Files (x86)\NCR\DSREnterprise\`"}" | Out-File -Append -FilePath runthis.ps1
     "if (test-path 'C:\ProgramData\NCR\DSREnterprise\'){Remove-Item -Recurse -Force `"C:\ProgramData\NCR\DSREnterprise\`"}" | Out-File -Append -FilePath runthis.ps1
 
-    copy runthis.ps1 $UNCFilePath
+    copy runthis.ps1 ${TargetWSPath}
 
     Write-Host "Beginning uninstall of DSR Enterprise Server."
     invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}

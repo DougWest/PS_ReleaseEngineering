@@ -1,6 +1,10 @@
 if (-NOT $env:Target_Machine){Write-Host "Required parameter Target_Machine is null!"; exit 1}
 
-if (-NOT (Test-WSMan -ComputerName ${env:Target_Machine} -ErrorAction:SilentlyContinue)){Write-Host "Connection Failure!"; exit 1}
+. "./DSR_AMS/Create-PSCredential.ps1"
+
+if (-NOT (Test-WSMan -Credential $JenkinsCred -Authentication Default -ComputerName ${env:Target_Machine} -ErrorAction:SilentlyContinue)){Write-Host "Connection Failure!"; exit 1}
+
+. "./DSR_AMS/Get-TargetWorkspace.ps1"
 
 # 1. There was a note that these types of shares cannot be made persistent across reboots.
 #    Suggest a scheduled task be defined which recreates the share (and perhaps the mount) on startup.
@@ -14,8 +18,10 @@ if (-NOT (Test-WSMan -ComputerName ${env:Target_Machine} -ErrorAction:SilentlyCo
 'Enable-ScheduledTask -TaskName "AMS_Mount"' | Out-File -Append -FilePath mountthis.ps1
 'Start-ScheduledTask -TaskName "AMS_Mount"' | Out-File -Append -FilePath mountthis.ps1
 
-$UNCFilePath = "\\${env:Target_Machine}\D$\temp\"
-if ("False" -EQ (test-path $UNCFilePath)){mkdir $UNCFilePath}
-copy mountthis.ps1 $UNCFilePath
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
-invoke-command -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\mountthis.ps1; echo Finished.}
+copy mountthis.ps1 ${TargetWSPath}
+
+invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\mountthis.ps1; echo Finished.}
+
+Remove-PSDrive Y

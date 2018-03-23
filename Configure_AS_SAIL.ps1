@@ -30,13 +30,13 @@ else
 
 # Deploy the package.
 Write-Host "Deploying the $Artifact package."
-$UNCFilePath=(Get-TargetWorkspace)[-1]
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
-if ("False" -EQ (test-path "${UNCFilePath}\unzipped")){New-Item -path "${UNCFilePath}\unzipped" -type directory}
-if ("False" -EQ (test-path "${UNCFilePath}\$ZipFileName")){copy $ZipFileName "${UNCFilePath}\$ZipFileName"}
-if ("False" -EQ (test-path "${UNCFilePath}\$MsiFileName")){copy $MsiFileName "${UNCFilePath}\$MsiFileName"}
-if ("False" -EQ (test-path "${UNCFilePath}\$SAIL")){copy $SAIL "${UNCFilePath}\$SAIL"}
-if ("False" -EQ (test-path "${UNCFilePath}\$SAILOverlay")){copy $SAILOverlay "${UNCFilePath}\$SAILOverlay"}
+if ("False" -EQ (test-path "${TargetWSPath}\unzipped")){New-Item -path "${TargetWSPath}\unzipped" -type directory}
+if ("False" -EQ (test-path "${TargetWSPath}\$ZipFileName")){copy $ZipFileName "${TargetWSPath}\$ZipFileName"}
+if ("False" -EQ (test-path "${TargetWSPath}\$MsiFileName")){copy $MsiFileName "${TargetWSPath}\$MsiFileName"}
+if ("False" -EQ (test-path "${TargetWSPath}\$SAIL")){copy $SAIL "${TargetWSPath}\$SAIL"}
+if ("False" -EQ (test-path "${TargetWSPath}\$SAILOverlay")){copy $SAILOverlay "${TargetWSPath}\$SAILOverlay"}
 
 # Unzipping and copying the folders and Install MS Web Deploy package
 "Add-Type -assembly `“system.io.compression.filesystem`”" | Out-File -FilePath runthis.ps1
@@ -53,9 +53,9 @@ if ("False" -EQ (test-path "${UNCFilePath}\$SAILOverlay")){copy $SAILOverlay "${
 "Rename-Item -Path `"d:\temp\unzipped\SAIL_Install\${SAIL}`" -newName `"SAIL.zip`"" | Out-File -Append -FilePath runthis.ps1
 "Rename-Item -Path `"d:\temp\unzipped\SAIL_Install\${SAILOverlay}`" -newName `"Overlay.zip`"" | Out-File -Append -FilePath runthis.ps1
 "cd unzipped\SAIL_Install" | Out-File -Append -FilePath runthis.ps1
-copy runthis.ps1 "${UNCFilePath}\runthis.ps1"
+copy runthis.ps1 "${TargetWSPath}\runthis.ps1"
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Unzipped.}
-copy "${UNCFilePath}\unzipped\logit.txt" .
+copy "${TargetWSPath}\unzipped\logit.txt" .
 
 Remove-PSDrive Y
 

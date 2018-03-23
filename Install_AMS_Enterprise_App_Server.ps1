@@ -38,10 +38,10 @@ $ZipFileName = Nexus-DownloadFile
 
 # Deploy the package.
 Write-Host "Setting up the deployment."
-$UNCFilePath=(Get-TargetWorkspace)[-1]
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
-if ("False" -EQ (test-path -path "${UNCFilePath}\unzipped")){New-Item -path "${UNCFilePath}\unzipped" -type directory}
-if ("False" -EQ (test-path -path "${UNCFilePath}\$ZipFileName")){copy $ZipFileName "${UNCFilePath}\$ZipFileName"}
+if ("False" -EQ (test-path -path "${TargetWSPath}\unzipped")){New-Item -path "${TargetWSPath}\unzipped" -type directory}
+if ("False" -EQ (test-path -path "${TargetWSPath}\$ZipFileName")){copy $ZipFileName "${TargetWSPath}\$ZipFileName"}
 
 $INSTALLDIR="`"D:\Copient\`""
 $INSTALLDIR_UNC="Y:\Copient"
@@ -60,12 +60,12 @@ if ("True" -EQ (test-path -path "$INSTALLDIR_UNC\unzipped\Logix_*")){Remove-Item
 "Start-Process msiexec '/i Logix.msi /qn SERVER_TYPE=application INSTALL_UE=true INSTALLDIR=$INSTALLDIR AGENTUSER=${env:CopientSVCUser} AGENTPASSWORD=${env:CopientSVCPass} AGENTPASSWORD2=${env:CopientSVCPass} RESET_AGENT_PASSWORD=true AUTOSTART_AGENTS=true START_AGENTS_NOW=true WEBSERVICESUSER=${env:CopientSERVICEUser} WEBSERVICESPASSWORD=${env:CopientSERVICEPass} WEBSERVICESPASSWORD2=${env:CopientSERVICEPass} RESET_WEBSERVICES_PASSWORD=true WEBSERVICE_HOST_HEADER_NAME=`"`" WEBSERVICE_LISTEN_ADDRESS=* WEBSERVICE_PORT_NUMBER=8071 LOGIXEX_DATABASE=LogixEX LOGIXEX_SERVER=${env:DB} LOGIXRT_DATABASE=LogixRT LOGIXRT_SERVER=${env:DB} LOGIXWH_DATABASE=LogixWH LOGIXWH_SERVER=${env:DB} LOGIXXS_DATABASE=LogixXS LOGIXXS_SERVER=${env:DB} REBOOT=ReallySuppress /l*v d:\temp\unzipped\logit.txt' -Wait" | Out-File -Append -FilePath runthis.ps1
 "setx /M PMDATABASE `"PrefManRT`"" | Out-File -Append -FilePath runthis.ps1
 
-copy runthis.ps1 "${UNCFilePath}\runthis.ps1"
+copy runthis.ps1 "${TargetWSPath}\runthis.ps1"
 
 Write-Host "Deploying the $Artifact package."
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}
 
-copy "${UNCFilePath}\unzipped\logit.txt" .
+copy "${TargetWSPath}\unzipped\logit.txt" .
 
 Remove-PSDrive Y
 

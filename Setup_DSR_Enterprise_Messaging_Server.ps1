@@ -30,7 +30,7 @@ if (! $DisplayName)
     exit 1
 }
 
-$UNCFilePath=(Get-TargetWorkspace)[-1]
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
 $INSTALLDIR="D:\Program Files (x86)\NCR\DSREnterprise\"
 $INSTALLDIR_UNC="Y:\Program Files (x86)\NCR\DSREnterprise\"
@@ -57,16 +57,16 @@ if ("true" -EQ $env:PrimaryServer)
     ".\Ncr.Retail.Platform.Setup.RabbitMQ.exe `"RabbitMQEnterpriseSetup.xml`" `"`${env:RABBITMQ_BASE}\rabbitmq_server-3.6.5\sbin`"" | Out-File -Append -FilePath ${PSFile}
     ".\Ncr.Retail.Platform.Setup.RabbitMQ.exe `"${ApplyFileName}`" `"`${env:RABBITMQ_BASE}\rabbitmq_server-3.6.5\sbin`"" | Out-File -Append -FilePath ${PSFile}
 }
-copy "${env:WORKSPACE}\ri\ncr\DSR_AMS\exchange.ps1" "${UNCFilePath}"
-copy "${env:WORKSPACE}\ri\ncr\DSR_AMS\queue.ps1" "${UNCFilePath}"
-copy "${env:WORKSPACE}\ri\ncr\DSR_AMS\bind.ps1" "${UNCFilePath}"
+copy "${env:WORKSPACE}\ri\ncr\DSR_AMS\exchange.ps1" "${TargetWSPath}"
+copy "${env:WORKSPACE}\ri\ncr\DSR_AMS\queue.ps1" "${TargetWSPath}"
+copy "${env:WORKSPACE}\ri\ncr\DSR_AMS\bind.ps1" "${TargetWSPath}"
 "cd \temp" | Out-File -Append -FilePath ${PSFile}
 ". .\exchange.ps1" | Out-File -Append -FilePath ${PSFile}
 ". .\queue.ps1" | Out-File -Append -FilePath ${PSFile}
 ". .\bind.ps1" | Out-File -Append -FilePath ${PSFile}
 
-Write-Host "Copy RabbitMQ config script to ${UNCFilePath}"
-copy ${PSFile} "${UNCFilePath}\${PSFile}"
+Write-Host "Copy RabbitMQ config script to ${TargetWSPath}"
+copy ${PSFile} "${TargetWSPath}\${PSFile}"
 
 Write-Host "Running Rabbit Service configuration script."
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd "D:\temp\"; . .\${using:PSFile}}
@@ -106,11 +106,11 @@ if ("true" -EQ $env:PrimaryServer)
 
         $EOMDataFileName = Nexus-DownloadFile -repositoryId $EOMRepo -artifactId "EOMData" -versionId $EOMDataVersion
 
-        if ("True" -EQ (test-path "$UNCFilePath\unzipped\EOMData")){Remove-Item "$UNCFilePath\unzipped\EOMData" -Recurse -Force}
-        if ("False" -EQ (test-path "$UNCFilePath\$EOMDataFileName")){copy "${env:WORKSPACE}\$EOMDataFileName" "$UNCFilePath\$EOMDataFileName"}
-        if ("False" -EQ (test-path "$UNCFilePath\unzipped\EOMData")){mkdir "$UNCFilePath\unzipped\EOMData"}
+        if ("True" -EQ (test-path "${TargetWSPath}\unzipped\EOMData")){Remove-Item "${TargetWSPath}\unzipped\EOMData" -Recurse -Force}
+        if ("False" -EQ (test-path "${TargetWSPath}\$EOMDataFileName")){copy "${env:WORKSPACE}\$EOMDataFileName" "${TargetWSPath}\$EOMDataFileName"}
+        if ("False" -EQ (test-path "${TargetWSPath}\unzipped\EOMData")){mkdir "${TargetWSPath}\unzipped\EOMData"}
         $PSFile="eomconfig.ps1"
-        if ("True" -EQ (test-path "$UNCFilePath\${PSFile}")){Remove-Item "$UNCFilePath\${PSFile}" -Recurse -Force}
+        if ("True" -EQ (test-path "${TargetWSPath}\${PSFile}")){Remove-Item "${TargetWSPath}\${PSFile}" -Recurse -Force}
         Write-Host "Downloading the EOMData Config Files"
         "Add-Type -assembly `"system.io.compression.filesystem`"" | Out-File -FilePath ${PSFile}
         "d:" | Out-File -Append -FilePath ${PSFile}
@@ -132,7 +132,7 @@ if ("true" -EQ $env:PrimaryServer)
         "copy .\POS.AssociateUsers.Mapping.xml 'd:\Program Files (x86)\NCR\DSREnterprise\Utilities\SampleBatch\EOMData\'" | Out-File -Append -FilePath ${PSFile}
         "copy .\Server.ActiveDirUsers.Mapping.xml 'd:\Program Files (x86)\NCR\DSREnterprise\Utilities\SampleBatch\EOMData\'" | Out-File -Append -FilePath ${PSFile}
         "copy .\Server.AssociateUsers.Mapping.xml 'd:\Program Files (x86)\NCR\DSREnterprise\Utilities\SampleBatch\EOMData\'" | Out-File -Append -FilePath ${PSFile}
-        copy ${PSFile} "$UNCFilePath\${PSFile}"
+        copy ${PSFile} "${TargetWSPath}\${PSFile}"
 
         Write-Host "Running EOMData overlay."
         invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; . .\${using:PSFile}}
@@ -142,13 +142,13 @@ if ("true" -EQ $env:PrimaryServer)
         Write-Host "New EOMData configuration is for version PI3 and above"
         # In POS.ActiveDirUsers.Mapping.xml & Server.ActiveDirUsers.Mapping.xml replace "Administrator,Cashier,Manager,Other,Supervisor" with "AP_EOM_NOP_Admin" and for prod "AP_EOM_PRD_Admin"
         $PSFile="eomconfig.ps1"
-        if ("True" -EQ (test-path "$UNCFilePath\${PSFile}")){Remove-Item "$UNCFilePath\${PSFile}" -Recurse -Force}
+        if ("True" -EQ (test-path "${TargetWSPath}\${PSFile}")){Remove-Item "${TargetWSPath}\${PSFile}" -Recurse -Force}
         "d:" | Out-File -FilePath ${PSFile}
         "cd 'd:\Program Files (x86)\NCR\DSREnterprise\Utilities\SampleBatch\EOMData'" | Out-File -Append -FilePath ${PSFile}
         # In POS.ActiveDirUsers.Mapping.xml & Server.ActiveDirUsers.Mapping.xml replace "Administrator,Cashier,Manager,Other,Supervisor" with "APP_EOM_NOP_Admin" and for prod "APP_EOM_PRD_Admin"
         "(Get-Content POS.ActiveDirUsers.Mapping.xml).replace('Administrator,Cashier,Manager,Other,Supervisor', '$env:APP_EOM_Permissions') | Set-Content `"POS.ActiveDirUsers.Mapping.xml`"" | Out-File -Append -FilePath ${PSFile}
         "(Get-Content Server.ActiveDirUsers.Mapping.xml).replace('Administrator,Cashier,Manager,Other,Supervisor', '$env:APP_EOM_Permissions') | Set-Content `"Server.ActiveDirUsers.Mapping.xml`"" | Out-File -Append -FilePath ${PSFile}
-        copy ${PSFile} "$UNCFilePath\${PSFile}"
+        copy ${PSFile} "${TargetWSPath}\${PSFile}"
 
         Write-Host "Running ActiveDirUsers overlay."
         invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; . .\${using:PSFile}}
@@ -258,7 +258,7 @@ if ("true" -EQ $env:PrimaryServer)
     "Start-Process '.\Ncr.Retail.NcrDataSetup.exe' $CParamQ -Wait" | Out-File -Append -FilePath ${PSFile}
     "Get-Content 'NcrDataSetup.out'" | Out-File -Append -FilePath ${PSFile}
 
-    copy ${PSFile} "$UNCFilePath\${PSFile}"
+    copy ${PSFile} "${TargetWSPath}\${PSFile}"
 
     Write-Host "Running Ncr.Retail.NcrDataSetup"
     invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; . .\${using:PSFile}}

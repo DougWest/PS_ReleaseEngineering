@@ -4,7 +4,7 @@ if (-NOT $env:Target_Machine){Write-Host "Required parameter Target_Machine is n
 . "./DSR_AMS/Create-PSCredential.ps1"
 
 "**********"  | Out-File -FilePath Report.txt
-if (-NOT (Test-WSMan -ComputerName ${env:Target_Machine} -Credential $JenkinsCred -Authentication Default -ErrorAction:SilentlyContinue))
+if (-NOT (Test-WSMan -Credential $JenkinsCred -Authentication Default -ComputerName ${env:Target_Machine} -ErrorAction:SilentlyContinue))
 {
     Write-Host "Connection Failure!"
     "${env:Target_Machine} failed to connect!" | Out-File -FilePath Report.txt

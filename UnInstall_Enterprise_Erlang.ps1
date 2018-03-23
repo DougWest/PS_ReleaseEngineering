@@ -16,7 +16,7 @@ if ($objRegChildReturn)
     #Uninstall the package.
     $FileName=Get-ChildItemNameValue ("UninstallString")
 
-    $UNCFilePath=(Get-TargetWorkspace)[-1]
+    $TargetWSPath=(Get-TargetWorkspace)[-1]
 
     "Start-Process `"$FileName`" /S -Wait | Out-File -FilePath d:\temp\output0.txt" | Out-File -FilePath runthis.ps1
     "if (Get-Process | Where-Object {`$_.Name -eq 'epmd'}){Stop-Process -Name 'epmd' -Force -confirm:`$false}" | Out-File -Append -FilePath runthis.ps1
@@ -24,11 +24,11 @@ if ($objRegChildReturn)
     "if ((test-path C:\Users\Jenkins_dev_qa\.erlang.cookie)){Remove-Item -Force C:\Users\Jenkins_dev_qa\.erlang.cookie}" | Out-File -Append -FilePath runthis.ps1
     "Remove-Item -Recurse -Force 'D:\Program Files\erl8.1'" | Out-File -Append -FilePath runthis.ps1
 
-    copy runthis.ps1 $UNCFilePath
+    copy runthis.ps1 ${TargetWSPath}
 
     invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}
 
-    copy "$UNCFilePath\output0.txt" "."
+    copy "${TargetWSPath}\output0.txt" "."
 
     Remove-PSDrive Y
 

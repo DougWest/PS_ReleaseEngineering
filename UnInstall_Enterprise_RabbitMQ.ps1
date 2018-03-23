@@ -35,8 +35,8 @@ if ($objRegChildReturn)
     if ($objRegChildReturn){Write-Host "RabbitMQ still installed!"; exit 1}else{Write-Host "RabbitmQ uninstalled."}
 
     #Remove the environment variable.
-    invoke-command -ComputerName $env:Target_Machine -ScriptBlock {(new-object -com wscript.shell).environment(“system”).remove(“RABBITMQ_CONFIG_FILE”)}
-    invoke-command -ComputerName $env:Target_Machine -ScriptBlock {(new-object -com wscript.shell).environment(“system”).remove(“RABBITMQ_BASE”)}
+    invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {(new-object -com wscript.shell).environment(“system”).remove(“RABBITMQ_CONFIG_FILE”)}
+    invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {(new-object -com wscript.shell).environment(“system”).remove(“RABBITMQ_BASE”)}
 }
 else
 {

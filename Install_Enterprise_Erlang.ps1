@@ -16,8 +16,6 @@ if (-NOT (Test-WSMan -Credential $JenkinsCred -Authentication Default -ComputerN
 . "./DSR_AMS/Get-RegChild.ps1"
 . "./DSR_AMS/Get-TargetWorkspace.ps1"
 
-$TargetWSPath=(Get-TargetWorkspace)[-1]
-
 $RegTermTarget = "Erlang*"
 
 $objRegChildReturn=Get-RegChild
@@ -47,6 +45,8 @@ else
     $ERLANG_HOME=invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName ${env:Target_Machine} -ScriptBlock {$env:ERLANG_HOME}
     if ("" -EQ $ERLANG_HOME){echo "ERLANG_HOME not set!"; exit 1}
 
+    $TargetWSPath=(Get-TargetWorkspace)[-1]
+
     # Copy package to Target_Machine
     Write-Host "ErlangOTP package copying to $env:Target_Machine."
     if ("False" -EQ (test-path ${TargetWSPath}\$FileName)){copy $FileName ${TargetWSPath}}
@@ -65,6 +65,8 @@ else
     Write-Host "ErlangOTP install copying back to workspace and displaying."
     copy ${TargetWSPath}"\output_Erlang.txt" .\output_Erlang.txt
     Get-Content .\output_Erlang.txt
+
+    Remove-PSDrive Y
 
     $objRegChildReturn=Get-RegChild
 

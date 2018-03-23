@@ -17,7 +17,7 @@ if ($objRegChildReturn)
     #Uninstall the package.
     $FileName=Get-ChildItemNameValue ("UninstallString")
 
-    $UNCFilePath=(Get-TargetWorkspace)[-1]
+    $TargetWSPath=(Get-TargetWorkspace)[-1]
 
     "d:" | Out-File -FilePath runthis.ps1
     "cd \temp\" | Out-File -Append -FilePath runthis.ps1
@@ -26,12 +26,12 @@ if ($objRegChildReturn)
     $ThisDate=$(Get-Date -UFormat "%m_%d_%Y_%H")
     "if (test-path `"C:\Program Files\NCR\AMS Brokers\_AMS Brokers_installation\Logs\AMS_Brokers_Uninstall_${ThisDate}_*.log`"){copy `"C:\Program Files\NCR\AMS Brokers\_AMS Brokers_installation\Logs\AMS_Brokers_Uninstall_${ThisDate}_*.log`" .}" | Out-File -Append -FilePath runthis.ps1
 
-    copy runthis.ps1 $UNCFilePath
+    copy runthis.ps1 ${TargetWSPath}
 
     Write-Host "Beginning uninstall of AMS Enterprise Broker Server."
     invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}
 
-    if (test-path "$UNCFilePath\AMS_Brokers_Uninstall_${ThisDate}_*.log"){copy "$UNCFilePath\AMS_Brokers_Uninstall_${ThisDate}_*.log" .}
+    if (test-path "${TargetWSPath}\AMS_Brokers_Uninstall_${ThisDate}_*.log"){copy "${TargetWSPath}\AMS_Brokers_Uninstall_${ThisDate}_*.log" .}
 
     Remove-PSDrive Y
 

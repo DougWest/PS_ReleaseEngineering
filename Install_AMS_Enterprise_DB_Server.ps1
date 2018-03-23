@@ -6,9 +6,9 @@ if (-NOT (Test-WSMan -Credential $JenkinsCred -Authentication Default -ComputerN
 
 . "./DSR_AMS/Get-TargetWorkspace.ps1"
 
-$UNCFilePath=(Get-TargetWorkspace)[-1]
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
-if (test-path "$UNCFilePath\SQL_Output.txt"){Remove-Item -path "$UNCFilePath\SQL_Output.txt"}
+if (test-path "${TargetWSPath}\SQL_Output.txt"){Remove-Item -path "${TargetWSPath}\SQL_Output.txt"}
 
 "d:" | Out-File -FilePath runsql.ps1
 "cd \temp\" | Out-File -Append -FilePath runsql.ps1
@@ -41,17 +41,17 @@ $L_PATH="${L_DRIVE}SQLLogs\"
 
 "sqlcmd -U $env:SQLUser -P $env:SQLUserPW -S ${env:Target_Machine} -i AMS_DB_login_creation.sql > SQL_Output.txt" | Out-File -Append -FilePath runsql.ps1
 
-Copy-Item runsql.ps1 "$UNCFilePath\runsql.ps1"
-Copy-Item ..\..\ret\ncr-db-server\AMS_DB_login_creation.sql "$UNCFilePath\AMS_DB_login_creation.sql"
+Copy-Item runsql.ps1 "${TargetWSPath}\runsql.ps1"
+Copy-Item ..\..\ret\ncr-db-server\AMS_DB_login_creation.sql "${TargetWSPath}\AMS_DB_login_creation.sql"
 
 # Run the target script.
 Write-Host "Run the target script."
 $ThisExitCode=(invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runsql.ps1; return $LastExitCode})[-1]
 
 Write-Host "Test for and copy back and output the SQL Output file."
-if (test-path "$UNCFilePath\SQL_Output.txt")
+if (test-path "${TargetWSPath}\SQL_Output.txt")
 {
-    Copy-Item "$UNCFilePath\SQL_Output.txt" .
+    Copy-Item "${TargetWSPath}\SQL_Output.txt" .
     # Write the target output
     Write-Host "Writing the target output."
     Get-Content -path SQL_Output.txt

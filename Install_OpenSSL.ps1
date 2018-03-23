@@ -41,6 +41,8 @@ invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $e
 if (test-path ${TargetWSPath}\output0.txt){copy ${TargetWSPath}\output0.txt .}
 if (test-path ${TargetWSPath}\OpenSSL_Silent.log){copy ${TargetWSPath}\OpenSSL_Silent.log .}
 
+Remove-PSDrive Y
+
 $objRegChildReturn=Get-RegChild
 
 if ($objRegChildReturn)

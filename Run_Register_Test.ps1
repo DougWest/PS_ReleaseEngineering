@@ -7,17 +7,17 @@ if (-NOT (Test-WSMan -Credential $JenkinsCred -Authentication Default -ComputerN
 
 . "./DSR_AMS/Get-TargetWorkspace.ps1"
 
-$UNCFilePath=(Get-TargetWorkspace -driveShare "temp" -pathShare "")[-1]
+$TargetWSPath=(Get-TargetWorkspace -driveShare "temp" -pathShare "")[-1]
 
-if ("False" -EQ (test-path -Path "${UNCFilePath}\Run_Register_Test")){New-Item -path "${UNCFilePath}\Run_Register_Test" -type directory}
-if ("False" -EQ (test-path -Path "${UNCFilePath}\Run_Register_Test")){Write-Host "Jenkins does not have rights to create ${UNCFilePath}\Run_Register_Test!"; exit 1}
+if ("False" -EQ (test-path -Path "${TargetWSPath}\Run_Register_Test")){New-Item -path "${TargetWSPath}\Run_Register_Test" -type directory}
+if ("False" -EQ (test-path -Path "${TargetWSPath}\Run_Register_Test")){Write-Host "Jenkins does not have rights to create ${TargetWSPath}\Run_Register_Test!"; exit 1}
 
 Write-Host "Cleaning the workspace on $env:Target_Machine."
-if (test-path -Path "${UNCFilePath}\Run_Register_Test\ncr-register-tests\"){del "${UNCFilePath}\Run_Register_Test\ncr-register-tests\" -Force -Recurse}
+if (test-path -Path "${TargetWSPath}\Run_Register_Test\ncr-register-tests\"){del "${TargetWSPath}\Run_Register_Test\ncr-register-tests\" -Force -Recurse}
 Write-Host "Workspace cleaning finished on $env:Target_Machine."
 
 Write-Host "Creating the workspace on $env:Target_Machine."
-if (test-path -path ".\ret\ncr-register-tests\"){Copy-Item -Path ".\ret\ncr-register-tests\" -Destination "${UNCFilePath}\Run_Register_Test\" -Recurse -Container}
+if (test-path -path ".\ret\ncr-register-tests\"){Copy-Item -Path ".\ret\ncr-register-tests\" -Destination "${TargetWSPath}\Run_Register_Test\" -Recurse -Container}
 Write-Host "Workspace creation finished on $env:Target_Machine."
 
 $sCompileCommand="c:; cd \temp\Run_Register_Test\ncr-register-tests\; mvn clean install `-DskipTests; `$LASTEXITCODE"
@@ -39,14 +39,14 @@ else
 "Write-Host (`$sTestResult `-join [Environment]::NewLine)" | Out-File -Append -FilePath testthis.ps1
 "return `$sMvn_LastExitCode" | Out-File -Append -FilePath testthis.ps1
 
-copy testthis.ps1 "$UNCFilePath\Run_Register_Test\testthis.ps1"
+copy testthis.ps1 "${TargetWSPath}\Run_Register_Test\testthis.ps1"
 
 Write-Host "Invoking Test Command."
 $sMvn_LastExitCode=invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {c:; cd \temp\Run_Register_Test; .\testthis.ps1}
 
-if (test-path -path "${UNCFilePath}\Run_Register_Test\ncr-register-tests\ncr-register-test\target\surefire-reports\testng-results.xml")
+if (test-path -path "${TargetWSPath}\Run_Register_Test\ncr-register-tests\ncr-register-test\target\surefire-reports\testng-results.xml")
 {
-    Copy-Item "${UNCFilePath}\Run_Register_Test\ncr-register-tests\ncr-register-test\target\surefire-reports\testng-results.xml" .
+    Copy-Item "${TargetWSPath}\Run_Register_Test\ncr-register-tests\ncr-register-test\target\surefire-reports\testng-results.xml" .
 } else {
     Write-Host "Test run results log not found."
 }

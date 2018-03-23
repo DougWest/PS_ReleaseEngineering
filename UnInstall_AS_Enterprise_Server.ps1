@@ -7,7 +7,7 @@ if (-NOT (Test-WSMan -Credential $JenkinsCred -Authentication Default -ComputerN
 . "./DSR_AMS/Get-RegChild.ps1"
 . "./DSR_AMS/Get-TargetWorkspace.ps1"
 
-$UNCFilePath=(Get-TargetWorkspace)[-1]
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
 #Verify the NCR Advanced Store Server - Customer Config Overlay package state.
 $RegTermTarget="{0E9F1AD6-CB64-41C5-AC3E-FE8FFE906E16}"
@@ -21,7 +21,7 @@ if ($objRegChildReturn)
 
     "Start-Process MsiExec.exe '/X"+$objRegChildReturn.PSChildName+" /qn' -Wait | Out-File -FilePath d:\temp\output0.txt" | Out-File -FilePath runthis.ps1
 
-    copy runthis.ps1 $UNCFilePath
+    copy runthis.ps1 ${TargetWSPath}
 
     Write-Host "Beginning uninstall of NCR Advanced Store Server - Customer Config Overlay."
     invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}
@@ -50,7 +50,7 @@ if ($objRegChildReturn)
     "if (test-path 'D:\Program Files (x86)\NCR\WebOffice\'){Remove-Item -Recurse -Force `"D:\Program Files (x86)\NCR\WebOffice\`"}" | Out-File -Append -FilePath runthis.ps1
     "if (test-path 'C:\ProgramData\NCR\'){Remove-Item -Recurse -Force `"C:\ProgramData\NCR\`"}" | Out-File -Append -FilePath runthis.ps1
 
-    copy runthis.ps1 $UNCFilePath
+    copy runthis.ps1 ${TargetWSPath}
 
     Write-Host "Beginning uninstall of NCR EOM-ETS Server."
     invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}
@@ -78,7 +78,7 @@ if ($objRegChildReturn)
     "Start-Process MsiExec.exe '/X"+$objRegChildReturn.PSChildName+" /qn' -Wait | Out-File -FilePath d:\temp\output0.txt" | Out-File -FilePath runthis.ps1
     "if (test-path 'D:\Program Files (x86)\NCR\AdvancedStore\'){Remove-Item -Recurse -Force `"D:\Program Files (x86)\NCR\AdvancedStore\`"}" | Out-File -Append -FilePath runthis.ps1
 
-    copy runthis.ps1 $UNCFilePath
+    copy runthis.ps1 ${TargetWSPath}
 
     Write-Host "Beginning uninstall of NCR Advanced Store Server Suite."
     invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}

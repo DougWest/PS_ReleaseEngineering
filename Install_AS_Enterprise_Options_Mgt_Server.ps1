@@ -39,10 +39,10 @@ $ZipFileName = Nexus-DownloadFile
 
 # Deploy the package.
 Write-Host "Setting up the deployment."
-$UNCFilePath=(Get-TargetWorkspace)[-1]
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
-if ("False" -EQ (test-path -path "${UNCFilePath}\unzipped")){New-Item -path "${UNCFilePath}\unzipped" -type directory}
-if ("False" -EQ (test-path -path "$UNCFilePath\$ZipFileName")){copy $ZipFileName "$UNCFilePath\$ZipFileName"}
+if ("False" -EQ (test-path -path "${TargetWSPath}\unzipped")){New-Item -path "${TargetWSPath}\unzipped" -type directory}
+if ("False" -EQ (test-path -path "${TargetWSPath}\$ZipFileName")){copy $ZipFileName "${TargetWSPath}\$ZipFileName"}
 
 # 6.8.602.2907 has a bug which forces an install to the "C:\Program File s(x86)\NCR\" path.
 if ("6.8.602.2907" -EQ $env:Target_Version)
@@ -74,13 +74,13 @@ else
 }
 "Start-Process msiexec '/i `"NCR Advanced Store Server - Customer Config Overlay.msi`" /qn INSTALLDIR=$INSTALLDIRQ WO_UNIQUE_ID=$env:WEBOFFICEID ENTERPRISESERVER=$env:DB SQLDBUSER=${env:SQLUser} SQLDBPASSWORD=${env:SQLUserPW} HTTPS_REDIRECT=false REBOOT=ReallySuppress /l*v d:\temp\unzipped\logit2.txt' -Wait" | Out-File -Append -FilePath runthis.ps1
 
-copy runthis.ps1 "$UNCFilePath\runthis.ps1"
+copy runthis.ps1 "${TargetWSPath}\runthis.ps1"
 
 Write-Host "Deploying the $Artifact package."
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}
 
-copy "$UNCFilePath\unzipped\logit.txt" .
-copy "$UNCFilePath\unzipped\logit2.txt" .
+copy "${TargetWSPath}\unzipped\logit.txt" .
+copy "${TargetWSPath}\unzipped\logit2.txt" .
 
 #Checking NCR Advanced Store Server Suite
 Write-Host "Checking NCR Advanced Store Server Suite"
@@ -156,7 +156,7 @@ if ("true" -EQ $env:RunSetup)
     [POST_BASE]
     ENABLED=YES') | Set-Content `"store_state`"" | Out-File -Append -FilePath cfgAdm.ps1
     "Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\NCRASServiceMonitor -Name Start -Value '2'" | Out-File -Append -FilePath cfgAdm.ps1
-    copy cfgAdm.ps1 "$UNCFilePath\cfgAdm.ps1"
+    copy cfgAdm.ps1 "${TargetWSPath}\cfgAdm.ps1"
     invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\cfgAdm.ps1; echo "Configured Admin Console"}
 
     #Configure EOM
@@ -179,7 +179,7 @@ if ("true" -EQ $env:RunSetup)
     $CParam='/STRT /HIDE'
     $CParamQ="'"+$CParam+"'"
     "Start-Process '.\ASDataSetup.exe' $CParamQ -Wait" | Out-File -Append -FilePath cfgthis.ps1
-    copy cfgthis.ps1 "$UNCFilePath\cfgthis.ps1"
+    copy cfgthis.ps1 "${TargetWSPath}\cfgthis.ps1"
     invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\cfgthis.ps1; echo "Configured-EOM"}
 
     #EOM Rabbit Server host configuration.
@@ -188,7 +188,7 @@ if ("true" -EQ $env:RunSetup)
     "cd `"\ProgramData\NCR\AdvancedStore\Server\ServerParams\Default\`"" | Out-File -Append -FilePath cfgRab.ps1
     "copy EOMHostCfg.xml EOMHostCfg.bak.xml" | Out-File -Append -FilePath cfgRab.ps1
     "(Get-Content EOMHostCfg.bak.xml).replace('<TARGET_HOST>localhost</TARGET_HOST>', '$Rabbit') | Set-Content `"EOMHostCfg.xml`"" | Out-File -Append -FilePath cfgRab.ps1
-    copy cfgRab.ps1 "$UNCFilePath\cfgRab.ps1"
+    copy cfgRab.ps1 "${TargetWSPath}\cfgRab.ps1"
     invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\cfgRab.ps1; echo "Configured EOM Rabbit host server."}
 }
 

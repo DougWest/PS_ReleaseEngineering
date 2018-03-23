@@ -36,10 +36,10 @@ $ZipFileName = Nexus-DownloadFile
 
 # Deploy the package.
 Write-Host "Setting up the deployment."
-$UNCFilePath=(Get-TargetWorkspace)[-1]
+$TargetWSPath=(Get-TargetWorkspace)[-1]
 
-if ("False" -EQ (test-path -path "${UNCFilePath}\unzipped")){New-Item -path "${UNCFilePath}\unzipped" -type directory}
-if ("False" -EQ (test-path -path "$UNCFilePath\$ZipFileName")){copy $ZipFileName "$UNCFilePath\$ZipFileName"}
+if ("False" -EQ (test-path -path "${TargetWSPath}\unzipped")){New-Item -path "${TargetWSPath}\unzipped" -type directory}
+if ("False" -EQ (test-path -path "${TargetWSPath}\$ZipFileName")){copy $ZipFileName "${TargetWSPath}\$ZipFileName"}
 
 $EPWD="||~BY100000000000cMRuX6fdrTyMp6z9BM0ndA=="
 
@@ -73,13 +73,13 @@ else
 }
 "Start-Process msiexec '/i `"NCR Advanced Store Server - Customer Config Overlay.msi`" /qn INSTALLDIR=$INSTALLDIRQ WO_UNIQUE_ID=$env:WEBOFFICEID ENTERPRISESERVER=$env:DB SQLDBUSER=${env:SQLUser} SQLDBPASSWORD=${env:SQLUserPW} HTTPS_REDIRECT=false REBOOT=ReallySuppress /l*v d:\temp\unzipped\logit2.txt' -Wait" | Out-File -Append -FilePath runthis.ps1
 
-copy runthis.ps1 "$UNCFilePath\runthis.ps1"
+copy runthis.ps1 "${TargetWSPath}\runthis.ps1"
 
 Write-Host "Deploying the $Artifact package."
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\runthis.ps1; echo Finished.}
 
-copy "$UNCFilePath\unzipped\logit.txt" .
-copy "$UNCFilePath\unzipped\logit2.txt" .
+copy "${TargetWSPath}\unzipped\logit.txt" .
+copy "${TargetWSPath}\unzipped\logit2.txt" .
 
 #Configure ETS
 "c:" | Out-File -FilePath cfgthis.ps1
@@ -98,7 +98,7 @@ else
 $CParam='/STRT /HIDE'
 $CParamQ="'"+$CParam+"'"
 "Start-Process '.\ASDataSetup.exe' $CParamQ -Wait" | Out-File -Append -FilePath cfgthis.ps1
-copy cfgthis.ps1 "$UNCFilePath\cfgthis.ps1"
+copy cfgthis.ps1 "${TargetWSPath}\cfgthis.ps1"
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\cfgthis.ps1; echo Configured-ETS.}
 
 #Configure Admin Console
@@ -110,7 +110,7 @@ Write-Host Configuring Admin Console
 [POST_BASE]
 ENABLED=YES') | Set-Content `"store_state`"" | Out-File -Append -FilePath cfgadm.ps1
 "Set-ItemProperty -Path HKLM:\SYSTEM\CurrentControlSet\Services\NCRASServiceMonitor -Name Start -Value '2'" | Out-File -Append -FilePath cfgadm.ps1
-copy cfgadm.ps1 "$UNCFilePath\cfgadm.ps1"
+copy cfgadm.ps1 "${TargetWSPath}\cfgadm.ps1"
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\cfgadm.ps1; echo Configured-AdminConsole.}
 
 #Disable SQL Logging.
@@ -119,7 +119,7 @@ invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $e
 "(Get-Content LoggingSQLMon.inf).replace('IMMEDIATE=YES', 'IMMEDIATE=NO') | Set-Content `"LoggingSQLMon.inf`"" | Out-File -Append -FilePath cfgsql.ps1
 "(Get-Content LoggingSQLMon.inf).replace('PERIOD=* * * * *', 'PERIOD=') | Set-Content `"LoggingSQLMon.inf`"" | Out-File -Append -FilePath cfgsql.ps1
 "Restart-Service `"NCR Task Manager`"" | Out-File -Append -FilePath cfgsql.ps1
-copy cfgsql.ps1 "$UNCFilePath\cfgsql.ps1"
+copy cfgsql.ps1 "${TargetWSPath}\cfgsql.ps1"
 invoke-command -Credential $JenkinsCred -Authentication Default -ComputerName $env:Target_Machine -ScriptBlock {d:; cd \temp; .\cfgsql.ps1; echo DisabledSQLLogging.}
 
 Remove-PSDrive Y
